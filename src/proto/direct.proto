@@ -1,0 +1,286 @@
+// 直采流量对接协议
+// 字段详细说明请参见 API说明文档
+package chenjia;
+syntax = "proto3";
+// 原生广告属性枚举
+enum NativeField {
+	// 标题;
+    TITLE = 1;
+    // 广告语;
+    AD_WORDS = 2;
+    // 描述;
+	DESC = 3;
+	// 主题图;
+	IMGS = 4;
+	// 小图标;
+	ICON = 5;
+	// click_url;
+	CLICK_URL = 6;
+	// download_url;
+	DOWNLOAD_URL = 7;
+	// deep_link;
+	DEEP_URL = 8;
+};
+
+message BidRequest {
+	//------------------------------------------- 协议基础信息
+
+    // 当前协议版本号, 目前版本号为1
+    required uint32 version = 1;
+
+	// 唯一的请求ID，32字节的字符串
+    required string request_id = 2;
+
+    // 是否测试请求。
+    optional bool test = 3 [default = false];
+
+	// 系统分配给SSP用户的token
+    required string ssp_token = 4;
+
+	//------------------------------------------- 浏览者信息
+
+	// 用户的IP地址
+	optional string ip = 5;
+
+	// 用户的浏览器类型，即HTTP请求头部的User-Agent
+	optional string user_agent = 6;
+
+	// 用户的默认系统语言
+	optional string language = 7;
+
+	// 媒体的分类
+	repeated uint32 category = 9;
+
+	// 媒体禁止的广告行业类目
+	repeated uint32 excluded_category = 10;
+
+	// 媒体禁止的目标主域名
+    repeated string exclude_domain = 11;
+
+    //------------------------------------------- 广告位基础信息
+	message Imp {
+		// 广告位的唯一标识
+		optional string ad_id = 2;
+
+		// 推广位的尺寸: 宽 x 高
+		optional string size = 3;
+
+		// 最低竞标价格，货币单位为人民币，数值含义为分/千次展现
+		optional uint32 floor_price = 4;
+
+		// 广告位展现形式 参加字典 dict-view-type.txt
+		optional uint32 view_type = 5;
+
+		// 推广位在页面所在的屏数
+		// 0: 未识别; 1-5: 第1-5屏; 6: 第六屏及以外
+		enum ViewScreen {
+			SCREEN_NA     = 0;
+			SCREEN_FIRST  = 1;
+			SCREEN_SECOND = 2;
+			SCREEN_THIRD  = 3;
+			SCREEN_FOURTH = 4;
+			SCREEN_FIFTH  = 5;
+			SCREEN_OTHER  = 6;
+		};
+		optional ViewScreen view_screen = 7 [default = SCREEN_NA];
+
+		// 视频广告
+		message Video {
+			// 贴片位置相对于所在视频的起始时间，0 表示前贴片, -1 表示后贴片，大于0的值表示中插
+			optional uint32 videoad_start_delay = 1;
+
+			//上述位置可能包含多个贴片，表示本贴片在上述集合中相对起始位置，单位毫秒
+			optional uint32 videoad_section_start_delay = 2;
+
+			//贴片最小播放时间长度,视频创意播放时间不可小于该值，单位毫秒
+			optional uint32 min_ad_duration = 3;
+
+			//贴片最大播放时间长度，单位毫秒
+			optional uint32 max_ad_duration = 4;
+		};
+		optional Video video = 8;
+
+		// 原生广告
+		message Native {
+			// 属性集合
+			repeated NativeField fields = 1;
+
+			// 标题最大长度
+			optional uint32 title_max = 2;
+
+			// 描述或者广告语最大长度
+			optional uint32 desc_max = 3;
+
+			// 图片宽度
+			optional uint32 image_width = 4;
+
+			// 图片高度
+			optional uint32 image_height = 5;
+
+			// 允许图片数量
+			// 1: 单张图片, 2: 2张图片, 3: 3张图片
+			optional uint32 image_nums = 6;
+
+			//模板id
+			optional string template_id = 7;
+		};
+		optional Native native = 9;
+	};
+	repeated Imp imp = 12;
+
+
+	//------------------------------------------- 无线推广位信息
+	message App {
+		// 应用名称
+		optional string app_name = 1;
+
+		// 应用包名（例如， com.foo.mygame)
+		// 安卓: package name, 苹果: bundleID
+		optional string package_name = 2;
+
+		message Device {
+			// 操作系统（e.g., "android","ios"）
+			optional string os = 1;
+
+			// 操作系统版本（e.g., "7.0.2"）
+			optional string osv = 2;
+
+			// 设备平台（e.g., "iPhone","android","ipad"）
+			optional string device_type = 3;
+
+			// 用户设备的屏幕方向 1：竖屏；2：横屏；3：未知；
+			optional uint32 orientation = 4;
+
+			// 设备品牌（e.g., "Apple"）
+			optional string brand = 5;
+
+			// 设备硬件版本（e.g., "5S"）
+			optional string hwv = 6;
+
+			// 设备的网络运营商 0-未知, 1-移动, 2-联通, 3-电信
+			optional uint32 operator = 7;
+
+			// 设备所处网络环境 0-未识别, 1-wifi, 2-2g, 3-3g, 4-4g
+			optional uint32 network = 8;
+
+			// 屏幕高度， 以像素为单位
+			optional uint32 h = 9;
+
+			// 屏幕宽度，以像素为单位
+			optional uint32 w = 10;
+
+			// 设备的屏幕分辨率（e.g., "1024x768"）
+			optional string device_size = 11;
+
+			// 设备所在地理位置的经度（e.g., "116.41667"）
+			optional string lon = 12;
+
+			// 设备所在地理位置的纬度（e.g., "39.91667"）
+			optional string lat = 13;
+
+			// 最接近设备的IPv4地址
+			optional string ip = 14;
+
+			// 最接近设备的IPV6地址
+			optional string ipv6 = 15;
+
+			// 用户设备唯一标识
+			// 对于IOS设备，该值为idfa
+			// 对于android设备，该值为imei
+			required string device_id = 16;
+
+			// 用户设备的mac地址
+			optional string mac = 17;
+
+			// 对于android设备, 设置androidId
+			optional string android_id = 18;
+
+
+			// 对于android 10版本设备, oaid
+			optional string oaid = 19;
+
+			// 金融流量可能附带京东pin
+			optional string pin = 20;
+		};
+		optional Device device = 3;
+	};
+	optional App app = 13;
+
+};
+
+
+
+
+message BidResponse {
+	// 当前协议版本号, 目前版本号为1
+	required uint32 version = 1;
+
+	// BidRequest中的bid
+    required string bid = 2;
+
+	// 唯一的请求ID,对应BidRequest中的request_id
+	required string request_id = 3;
+
+	optional string dspId = 4;
+
+
+    // 若DSP不对本次请求报价，则不要设置本字段
+    message Ads {
+		// 标记该广告对应的广告位ID
+		optional string ad_id = 1;
+
+        // 广告价格（人民币），单位为分/千次展现
+        required uint32 max_cpm_price = 2;
+
+		// 创意在DSP中的唯一ID
+		optional string creative_id = 3;
+
+		// 参与PMP竞价的id, 要和请求中Deal定义中的dealid一致
+        // 如果不设置标识参与公开竞价
+        //optional uint32 dealid = 5;
+
+		// 非原生广告落地页地址
+		optional string ldp = 6;
+
+		// 非原生广告图片地址
+		optional string imgurl = 7;
+
+		// 原生广告属性信息
+		message Attr{
+			// 属性名 参见 属性集合
+			// title,adWords,desc,icon,imgs1,imgs2,imgs3,clickUrl,downloadUrl,deepUrl
+			required string name = 1;
+
+			// 属性值
+			required string value = 2;
+		}
+		repeated Attr attr = 9;
+
+		// 广告展示时的反馈地址，数组
+		repeated string show_url = 10;
+
+		// 广告点击时的反馈地址，数组
+		repeated string click_url = 11;
+
+		message Video {
+            //素材的时长，单位:毫秒
+            optional uint32 duration = 1;
+
+            //非托管动态素材的URL
+            optional string url = 2;
+
+            //播放事件监测,各媒体对播放监测的支持能力不同
+            //播放开始监测
+            repeated string event_start = 3;
+
+            //播放中点监测
+            repeated string event_midpoint = 4;
+
+            //播放完毕监测
+            repeated string event_complete = 5;
+
+        }
+        optional Video video = 13;
+    }
+    repeated Ads ads = 5;
+}
