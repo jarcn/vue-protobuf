@@ -19,3 +19,8 @@ npm run build
 ```
 npm run lint
 ```
+
+### 根据proto文件生成对应的js文件
+```
+npx pbjs -t json-module -w commonjs -o src/proto/proto.js  src/proto/*.proto
+```
